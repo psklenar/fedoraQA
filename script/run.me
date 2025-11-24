@@ -16,5 +16,5 @@ for i in $(python get_image_names.py | grep aarch| gawk -F: '{ print $2 }') ; do
     testing-farm request --git-url https://github.com/psklenar/fedoraQA.git --git-ref main --test-type fmf --compose $i --arch aarch64 &> $LOG"fedoraqa".$i &
 done
 
-cat /tmp/TFT.fedoraqa* | egrep "https://artif| on "
+cat /tmp/TFT.fedoraqa* | grep -E "https://artif| on "
 
