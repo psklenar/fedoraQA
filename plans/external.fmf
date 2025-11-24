@@ -25,7 +25,7 @@
   execute:
     how: tmt
 
-/public:
+/cups:
   summary: Public Tier1 tests
   discover:
   - name: cups-public
