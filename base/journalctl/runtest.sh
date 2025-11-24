@@ -37,18 +37,18 @@ rlJournalStart
         rlLog "$DEFAULT_IF"
     rlPhaseEnd
 
-    rlPhaseStartTest
+    rlPhaseStartTest "journalctl -aeb should be empty"
         rlRun "journalctl -aeb"
         rlRun "journalctl -aeb | grep audit"
     rlPhaseEnd
 
-    rlPhaseStartTest
+    rlPhaseStartTest "mount points issues"
         if sudo journalctl -b | grep -iv '\<recovery algorithm\>' | grep -iE '\<(dirty bit|corrupt|run fsck|recovery|recovering|tree-log replay)\>' >/dev/null; then
-  rlFail "there are some output"
+  rlFail "there are some output in recovery algorithm ..."
 else
   rlPass "no output"
 fi
-        journalctl -b > journal.log
+        journalctl -b > journal.$TMT_REBOOT_COUNT.log
         rlFileSubmit journal.log
         if [ "$TMT_REBOOT_COUNT" -eq 0 ]; then
             rlLog "rebooting"
