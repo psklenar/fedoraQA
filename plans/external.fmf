@@ -30,12 +30,8 @@
   discover:
   - name: cups-public
     how: fmf
-    filter: 'tier: 1 & tag: -multihost'
+    filter: 'name: cups-systemd-units-smoke'
     url: "https://gitlab.com/redhat/centos-stream/tests/cups.git"
-  - name: cups-filters-public
-    how: fmf
-    filter: 'tier: 1 & tag: cups_tc & tag: -multihost'
-    url: https://gitlab.com/redhat/centos-stream/tests/cups-filters.git
   execute:
     how: tmt
 
