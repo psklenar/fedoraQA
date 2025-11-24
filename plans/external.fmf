@@ -30,7 +30,7 @@
   discover:
   - name: cups-public
     how: fmf
-    filter: 'name: cups-systemd-units-smoke'
+    filter: 'name:/Sanity/cups-systemd-units-smoke'
     url: "https://gitlab.com/redhat/centos-stream/tests/cups.git"
   execute:
     how: tmt
