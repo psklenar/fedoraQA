@@ -1,0 +1,10 @@
+#python get_image_names.py | gawk -F: '{ print $2 }'
+
+for i in $(python get_image_names.py |grep x86_64 | gawk -F: '{ print $2 }') ; do 
+    testing-farm request --git-url https://github.com/psklenar/fedoraQA.git --git-ref main --test-type fmf --compose $i --arch x86_64 &
+done
+
+
+for i in $(python get_image_names.py | grep aarch| gawk -F: '{ print $2 }') ; do
+    testing-farm request --git-url https://github.com/psklenar/fedoraQA.git --git-ref main --test-type fmf --compose $i --arch aarch64 &
+done
