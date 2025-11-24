@@ -1,0 +1,13 @@
+summary: 'Test for: (journalctl smoke test)'
+description: journalctl smoke test
+contact: Petr Sklenar <psklenar@redhat.com>
+test: ./runtest.sh
+framework: beakerlib
+duration: 15m
+enabled: true
+tag:
+  - cloud
+component:
+  - systemd
+recommend:
+  - systemd

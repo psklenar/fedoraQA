@@ -1,0 +1,41 @@
+/vsftpd:
+  summary: Public Tier1 tests
+  discover:
+    how: fmf
+    filter: 'tier: 1'
+    url: "https://gitlab.com/redhat/centos-stream/tests/vsftpd.git"
+  execute:
+    how: tmt
+
+/chrony:
+  summary: Public Tier1 tests
+  discover:
+    how: fmf
+    filter: 'tier: 1'
+    url: "https://gitlab.com/redhat/centos-stream/tests/chrony.git"
+  execute:
+    how: tmt
+
+/unbound:
+  summary: Public Tier1 tests
+  discover:
+    how: fmf
+    filter: 'tier: 1'
+    url: "https://gitlab.com/redhat/centos-stream/tests/unbound.git"
+  execute:
+    how: tmt
+
+/public:
+  summary: Public Tier1 tests
+  discover:
+  - name: cups-public
+    how: fmf
+    filter: 'tier: 1 & tag: -multihost'
+    url: "https://gitlab.com/redhat/centos-stream/tests/cups.git"
+  - name: cups-filters-public
+    how: fmf
+    filter: 'tier: 1 & tag: cups_tc & tag: -multihost'
+    url: https://gitlab.com/redhat/centos-stream/tests/cups-filters.git
+  execute:
+    how: tmt
+

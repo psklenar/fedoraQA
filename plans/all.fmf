@@ -1,0 +1,5 @@
+summary: Run all tests for tests PR
+discover:
+    how: fmf
+execute:
+    how: tmt
