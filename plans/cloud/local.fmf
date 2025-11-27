@@ -1,5 +1,5 @@
-/cloud:
-  summary: Public cloud tests from https://fedoraproject.org/wiki/Test_Results:Current_Cloud_Test
+/wiki:
+  summary: Tests from https://fedoraproject.org/wiki/Test_Results:Current_Cloud_Test
   discover:
     how: fmf
     filter: 'tag: cloud'
