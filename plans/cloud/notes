@@ -1,0 +1,1 @@
+Plans in this directory are run during 'CLOUD' tests => using fmf filter --plan '/cloud/'
