@@ -43,7 +43,14 @@ rlJournalStart
     rlPhaseEnd
 
     rlPhaseStartTest "mount points issues"
-        if journalctl -b | grep -iv '\<recovery algorithm\>' | grep -iE '\<(dirty bit|corrupt|run fsck|recovery|recovering|tree-log replay)\>'; then
+#
+#
+#    The following are not errors (they just contain suspicious keywords):
+#
+#    raid6: using avx2x2 recovery algorithm
+#    kernel: CPU features: detected: Hardware dirty bit management
+
+        if journalctl -b | grep -iv '\<recovery algorithm\>' | grep -iE '\<(corrupt|run fsck|recovery|recovering|tree-log replay)\>'; then
   rlFail "there are some output in recovery algorithm ..."
 else
   rlPass "no output"
