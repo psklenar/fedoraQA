@@ -143,7 +143,7 @@ def get_artifacts_url(api_url):
         return None
 
 
-def test_request(git_url, compose, plan=None):
+def test_request(git_url, compose, arch, plan=None):
     # Check for required API token
     api_token = os.environ.get('TESTING_FARM_API_TOKEN')
     if not api_token:
@@ -160,6 +160,7 @@ def test_request(git_url, compose, plan=None):
             '--git-url', git_url,
             '--git-ref', 'main',
             '--test-type', 'fmf',
+            '--arch', arch,
         ]
         if plan:
             cmd.extend(['--plan', plan])
@@ -195,6 +196,29 @@ def test_request(git_url, compose, plan=None):
         return None
     return request_api_url
 
+def get_results(api_url):
+    """
+    Retrieve the 'overall' result from the Testing Farm API request.
+
+    Args:
+        api_url (str): The API request URL (e.g., https://api.testing-farm.io/v0.1/requests/<uuid>).
+
+        Returns:
+            str: The value of 'result["overall"]', e.g., 'passed', 'failed', or 'NOTFOUND' if not found or error.
+    """
+    try:
+        data = fetch_api_data(api_url)
+        result = data.get("result", {})
+        overall = result.get("overall")
+        if overall is None:
+            return "warn"
+        # Normalize "failed" to "fail"
+        if overall == "failed":
+            return "fail"
+        return overall
+    except Exception as e:
+        logging.debug(f"Failed to get results from {api_url}: {e}")
+        return "warn"
 
 def main():
     """
@@ -208,7 +232,7 @@ def main():
     parser.add_argument("--deadline-hours", type=float, default=10.0, help="Maximum hours to wait (default: 10).")
     parser.add_argument("--plan", dest="plan", help="The plan to test against.")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging.")
-
+    parser.add_argument("--arch", dest="arch", help="The architecture to test against.")
     args = parser.parse_args()
 
     # Optionally set debug flag
@@ -221,13 +245,13 @@ def main():
         parser.error("--git-url and --compose are required when submitting a new request")
     
     overall_start_time = time.time()
-    result_url = test_request(args.git_url, args.compose, args.plan)
+    result_url = test_request(args.git_url, args.compose, args.arch, args.plan)
     if result_url:
         logging.info(f'Test request submitted successfully! API URL: {result_url}')
         final_state, _ = wait_for_completion(result_url, args.check_interval, args.deadline_hours)
         logging.info(f'Final state: {final_state}')
         artifacts_url = get_artifacts_url(result_url)
-        
+        results = get_results(result_url)
         # Calculate total duration in hours
         total_duration_seconds = time.time() - overall_start_time
         total_duration_hours = total_duration_seconds / 3600
@@ -239,13 +263,15 @@ def main():
             print(f"artifacts_url={artifacts_url}")
         else:
             print("artifacts_url=")
-        
+        print("results=", results)
+
         sys.exit(0 if final_state == 'complete' else 1)
     else:
         logging.error('Test request failed.')
         print("final_state=failed")
         print("duration=0.00h")
         print("artifacts_url=")
+        print("results=warn")
         sys.exit(1)
 
 if __name__ == "__main__":

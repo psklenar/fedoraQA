@@ -277,6 +277,8 @@ def main():
                         help="Only check if results exist, don't add them. Prints 'NO RESULTS' or 'RESULTS MISSING'")
     parser.add_argument("--comment", default="",
                         help="Comment to add to test results")
+    parser.add_argument("--status", default="warn", choices=["pass", "fail", "warn"],
+                        help="Status for test results: pass, fail, or warn (default: 'warn')")
     
     args = parser.parse_args()
     
@@ -308,13 +310,13 @@ def main():
         ("QA:Testcase_base_startup", True),
         ("QA:Testcase_base_reboot_unmount", False),
         ("QA:Testcase_base_system_logging", False),
-        ("QA:Testcase_base_update_cli", False),
-        ("QA:Testcase_package_install_remove", False),
+#        ("QA:Testcase_base_update_cli", False),
+#        ("QA:Testcase_package_install_remove", False),
 ##        ("QA:Testcase_base_artwork_release_identification", False),
 ##        ("QA:Testcase_base_edition_self_identification", False),
-        ("QA:Testcase_base_services_start", False),
-        ("QA:Testcase_base_selinux", False),
-        ("QA:Testcase_base_service_manipulation", False),
+#        ("QA:Testcase_base_services_start", False),
+#        ("QA:Testcase_base_selinux", False),
+#        ("QA:Testcase_base_service_manipulation", False),
     ]
 
     # List of sections to report results for (from command line)
@@ -336,7 +338,7 @@ def main():
                 testcase_list=testcase_list,
                 section=section,
                 environment="EC2 (KVM)",
-                status="pass",
+                status=args.status,
                 milestone=milestone,
                 bugs=None,
                 comment=args.comment,

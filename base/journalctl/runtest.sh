@@ -43,7 +43,7 @@ rlJournalStart
     rlPhaseEnd
 
     rlPhaseStartTest "mount points issues"
-        if sudo journalctl -b | grep -iv '\<recovery algorithm\>' | grep -iE '\<(dirty bit|corrupt|run fsck|recovery|recovering|tree-log replay)\>' >/dev/null; then
+        if journalctl -b | grep -iv '\<recovery algorithm\>' | grep -iE '\<(dirty bit|corrupt|run fsck|recovery|recovering|tree-log replay)\>'; then
   rlFail "there are some output in recovery algorithm ..."
 else
   rlPass "no output"
