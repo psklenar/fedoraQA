@@ -25,7 +25,7 @@ rlJournalStart
 #running vkcube --valide in headless in terminal = https://bugzilla.redhat.com/show_bug.cgi?id=2416951
 # this is reproducer for 
 
-    rlPhaseStartTest "check vkcubend about segfaults"
+    rlPhaseStartTest "check vkcube about segfaults"
         rlWatchdog "xwfb-run -c mutter -- vkcube --validate" 60
         sleep 5 # it needs some time
         CORES_COUNT_NEW=$(coredumpctl list | grep -c "$PROGRAM") &>/dev/null
