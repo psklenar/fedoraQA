@@ -28,7 +28,7 @@ rlJournalStart
     rlPhaseStartTest "check vkcubend about segfaults"
         LOG1=`mktemp`
         #$?=124 is good end by timeout, sigterm
-        rlRun -t 60 "xwfb-run -c mutter -- vkcube --validate" 124
+        rlWatchdog "xwfb-run -c mutter -- vkcube --validate" 60
         sleep 5 # it needs some time
         CORES_COUNT_NEW=$(coredumpctl list | grep -c "$PROGRAM") &>/dev/null
         rlAssertEquals "Number of old and new coredumps should be equal." $CORES_COUNT_OLD $CORES_COUNT_NEW
