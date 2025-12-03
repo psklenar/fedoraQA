@@ -37,6 +37,8 @@ rlJournalStart
 
     rlPhaseStartCleanup
          rlLog 'no Cleanup'
+         rlLog "`ps aux`"
+         pkill -9 vkcube
     rlPhaseEnd
 rlJournalPrintText
 rlJournalEnd   
