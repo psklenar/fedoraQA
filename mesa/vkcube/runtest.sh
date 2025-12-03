@@ -25,13 +25,11 @@ rlJournalStart
 #running vkcube --valide in headless in terminal = https://bugzilla.redhat.com/show_bug.cgi?id=2416951
 # this is reproducer for 
 
-    rlPhaseStartTest "vkcube --validate and count segfaults"
+    rlPhaseStartTest "check vkcubend about segfaults"
         LOG1=`mktemp`
         #$?=124 is good end by timeout, sigterm
-        rlRun -s "timeout 60 xwfb-run -c mutter -- vkcube --validate" 124
-        echo "===================="
-        cat $rlRun_LOG
-        echo "===================="
+        timeout 60 xwfb-run -c mutter -- vkcube --validate
+        rlAssertEquals 'vkcube --validate' 124 $?
         sleep 5 # it needs some time
         CORES_COUNT_NEW=$(coredumpctl list | grep -c "$PROGRAM") &>/dev/null
         rlAssertEquals "Number of old and new coredumps should be equal." $CORES_COUNT_OLD $CORES_COUNT_NEW
