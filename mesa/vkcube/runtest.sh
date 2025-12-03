@@ -6,6 +6,7 @@
 
 # Include Beaker environment
 . /usr/share/beakerlib/beakerlib.sh || exit 1
+PROGRAM="vkcube"
 
 
 rlJournalStart
@@ -15,20 +16,29 @@ rlJournalStart
         rlLog "Arch: $(arch), PC name: $(hostname), $(hostname -A) User: $(whoami)"
         rlLog "$DEFAULT_IF"
         rlRun -t "dmidecode -s system-product-name"
+        rlLog "`rpm -qa | grep mesa`"
+        VKCUBE_FILE=$(which vkcube)
+        rlLog "`rpm -qf $VKCUBE_FILE`"
+        CORES_COUNT_OLD=$(coredumpctl list | grep -c "$PROGRAM") &>/dev/null
     rlPhaseEnd
 
+#running vkcube --valide in headless in terminal = https://bugzilla.redhat.com/show_bug.cgi?id=2416951
+# this is reproducer for 
 
-    rlPhaseStartTest ""
+    rlPhaseStartTest "vkcube --validate and count segfaults"
         LOG1=`mktemp`
-        rlRun -s "xwfb-run -c mutter -- timeout --preserve-status 60 vkcube --validate"
+        #$?=124 is good end by timeout, sigterm
+        rlRun -s "timeout 60 xwfb-run -c mutter -- vkcube --validate" 124
         echo "===================="
         cat $rlRun_LOG
         echo "===================="
+        sleep 5 # it needs some time
+        CORES_COUNT_NEW=$(coredumpctl list | grep -c "$PROGRAM") &>/dev/null
+        rlAssertEquals "Number of old and new coredumps should be equal." $CORES_COUNT_OLD $CORES_COUNT_NEW
     rlPhaseEnd
 
-
     rlPhaseStartCleanup
-         rlLog 'Cleanup'
+         rlLog 'no Cleanup'
     rlPhaseEnd
 rlJournalPrintText
 rlJournalEnd   
