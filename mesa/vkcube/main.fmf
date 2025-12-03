@@ -1,0 +1,21 @@
+summary: mesa vkcube
+description: mesa vkcube --validate
+contact: Petr Sklenar <psklenar@redhat.com>
+test: ./runtest.sh
+framework: beakerlib
+duration: 15m
+enabled: true
+tag:
+  - notag
+component:
+  - mesa
+recommend:
+  - mesa
+  - mesa-vulkan-drivers
+  - mesa-filesystem
+  - vulkan-loader
+  - vulkan-validation-layers
+  - vulkan-tools
+  - dmidecode
+  - mutter
+  - xwayland-run

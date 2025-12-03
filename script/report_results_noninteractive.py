@@ -147,7 +147,7 @@ def report_result(
         raise ValueError(f"Invalid username: '{username}'. Wiki username: '{wiki.username}'")
 
     # Create the result object
-    res = wikitcms.result.Result(status, username, bugs, comment)
+    res = wikitcms.result.Result(status, ("bot=true|" + username), bugs, comment)
 
     # Download and print current results for debugging before adding new result
     current_result = test.results.get(env)

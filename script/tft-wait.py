@@ -215,6 +215,9 @@ def get_results(api_url):
         # Normalize "failed" to "fail"
         if overall == "failed":
             return "fail"
+        # Normalize "passed" to "pass"
+        if overall == "passed":
+            return "pass"
         return overall
     except Exception as e:
         logging.debug(f"Failed to get results from {api_url}: {e}")
