@@ -3,7 +3,7 @@ description: mesa vkcube --validate
 contact: Petr Sklenar <psklenar@redhat.com>
 test: ./runtest.sh
 framework: beakerlib
-duration: 225m
+duration: 25m
 enabled: true
 tag:
   - notag
