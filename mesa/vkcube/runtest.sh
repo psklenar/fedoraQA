@@ -3,6 +3,8 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #   Author: psklenar@redhat.com <psklenar@redhat.com>
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#this is reproducer for https://bugzilla.redhat.com/show_bug.cgi?id=2416557
+#Still there is issue in : running vkcube --valide in headless in terminal = https://bugzilla.redhat.com/show_bug.cgi?id=2416951
 
 # Include Beaker environment
 . /usr/share/beakerlib/beakerlib.sh || exit 1
@@ -22,8 +24,6 @@ rlJournalStart
         CORES_COUNT_OLD=$(coredumpctl list | grep -c "$PROGRAM") &>/dev/null
     rlPhaseEnd
 
-#running vkcube --valide in headless in terminal = https://bugzilla.redhat.com/show_bug.cgi?id=2416951
-# this is reproducer for 
 
     rlPhaseStartTest "check vkcube about segfaults"
         rlRun "xwfb-run -c mutter -- vkcube --validate --c 10"
