@@ -26,7 +26,7 @@ rlJournalStart
 # this is reproducer for 
 
     rlPhaseStartTest "check vkcube about segfaults"
-        rlWatchdog "xwfb-run -c mutter -- vkcube --validate" 60
+        rlRun "xwfb-run -c mutter -- vkcube --validate  --c 10"
         sleep 5 # it needs some time
         CORES_COUNT_NEW=$(coredumpctl list | grep -c "$PROGRAM") &>/dev/null
         rlAssertEquals "Number of old and new coredumps should be equal." $CORES_COUNT_OLD $CORES_COUNT_NEW
@@ -36,7 +36,7 @@ rlJournalStart
     rlPhaseStartCleanup
          rlLog 'no Cleanup'
          #kill it, otherwise testing-farm wait for the end.
-         pkill -9 vkcube
+        # pkill -9 vkcube
     rlPhaseEnd
 rlJournalPrintText
 rlJournalEnd   
