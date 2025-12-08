@@ -43,15 +43,16 @@ def fetch_api_data(api_url, max_retries=3, retry_interval=10):
 
 ###########################################################
 # Parse the output
-#eval $(./tft-wait.py --git-url <url> --compose <compose> 2>/dev/null | grep -E '^(final_state|duration|artifacts_url)=')
+#eval $(./tft-wait.py --git-url <url> --compose <compose> 2>/dev/null | grep -E '^(FINAL_STATE|DURATION|ARTIFACTS_URL|RESULTS)=')
 
 # Or source it
-#source <(./tft-wait.py --git-url <url> --compose <compose> 2>&1 | grep -E '^(final_state|duration|artifacts_url)=')
+#source <(./tft-wait.py --git-url <url> --compose <compose> 2>&1 | grep -E '^(FINAL_STATE|DURATION|ARTIFACTS_URL|RESULTS)=')
 
 # Then use the variables
-#echo "State: $final_state"
-#echo "Duration: $duration seconds"
-#echo "Artifacts: $artifacts_url"
+#echo "State: $FINAL_STATE"
+#echo "Duration: $DURATION"
+#echo "Artifacts: $ARTIFACTS_URL"
+#echo "Results: $RESULTS"
 ###########################################################
 
 def wait_for_completion(api_url, check_interval, deadline_hours):
@@ -243,6 +244,9 @@ def main():
     DEBUG = args.debug
     logging.getLogger().setLevel(logging.DEBUG if DEBUG else logging.INFO)
 
+    # Internal environment variables dictionary
+    env = {}
+
     # Submit a new request
     if not args.git_url or not args.compose:
         parser.error("--git-url and --compose are required when submitting a new request")
@@ -259,22 +263,32 @@ def main():
         total_duration_seconds = time.time() - overall_start_time
         total_duration_hours = total_duration_seconds / 3600
         
+        # Store values in internal environment dictionary
+        env['FINAL_STATE'] = final_state
+        env['DURATION'] = f"{total_duration_hours:.2f}h"
+        env['ARTIFACTS_URL'] = artifacts_url if artifacts_url else ""
+        env['RESULTS'] = results
+        
         # Output in bash-parsable format
-        print(f"final_state={final_state}")
-        print(f"duration={total_duration_hours:.2f}h")
-        if artifacts_url:
-            print(f"artifacts_url={artifacts_url}")
-        else:
-            print("artifacts_url=")
-        print("results=", results)
+        print(f"FINAL_STATE={env['FINAL_STATE']}")
+        print(f"DURATION={env['DURATION']}")
+        print(f"ARTIFACTS_URL={env['ARTIFACTS_URL']}")
+        print(f"RESULTS={env['RESULTS']}")
 
         sys.exit(0 if final_state == 'complete' else 1)
     else:
         logging.error('Test request failed.')
-        print("final_state=failed")
-        print("duration=0.00h")
-        print("artifacts_url=")
-        print("results=warn")
+        # Store values in internal environment dictionary
+        env['FINAL_STATE'] = 'failed'
+        env['DURATION'] = '0.00h'
+        env['ARTIFACTS_URL'] = ''
+        env['RESULTS'] = 'warn'
+        
+        # Output in bash-parsable format
+        print(f"FINAL_STATE={env['FINAL_STATE']}")
+        print(f"DURATION={env['DURATION']}")
+        print(f"ARTIFACTS_URL={env['ARTIFACTS_URL']}")
+        print(f"RESULTS={env['RESULTS']}")
         sys.exit(1)
 
 if __name__ == "__main__":

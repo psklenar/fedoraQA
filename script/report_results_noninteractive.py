@@ -11,9 +11,7 @@ import argparse
 import logging
 import re
 import sys
-
 import wikitcms.wiki
-
 import wikitcms.result
 
 
@@ -123,19 +121,19 @@ def report_result(
         )
 
     # If --try mode, only check for results and exit script
+    # RESULTS_MISSING=error code 1
+    # RESULTS_FOUND=error code 0
     if try_mode:
         if not test or not env:
-            print("RESULTS MISSING")
-            sys.exit(0)
+            print("RESULTS_MISSING, No test case or environment found")
+            sys.exit(2)
         current_result = test.results.get(env)
         if current_result:
-            # Results found, don't save and report RESULTS MISSING
-            print("RESULTS FOUND")
-            sys.exit(1)
-        else:
-            # No results found, don't save and report NO RESULTS
-            print("RESULTS MISSING")
+            print("RESULTS_FOUND")
             sys.exit(0)
+        else:
+            print("RESULTS_MISSING")
+            sys.exit(1)
 
     # Validate that test exists before proceeding
     if not test:
@@ -274,7 +272,7 @@ def main():
     parser.add_argument("--debug", action="store_true",
                         help="Enable debug logging to show detailed information")
     parser.add_argument("--try", dest="try_mode", action="store_true",
-                        help="Only check if results exist, don't add them. Prints 'NO RESULTS' or 'RESULTS MISSING'")
+                        help="Only check if results exist, don't add them. Prints 'RESULTS MISSING'")
     parser.add_argument("--comment", default="",
                         help="Comment to add to test results")
     parser.add_argument("--status", default="warn", choices=["pass", "fail", "warn"],
@@ -299,12 +297,9 @@ def main():
     curr = wiki.get_current_compose(dist='Fedora')
     release = int(curr["release"])
     milestone = curr["milestone"]
-    # this is a handy way to get whichever is set, and if for some
-    # crazy reason both are set it'll prefer 'T/RCx' to 'YYYYMMDD',
-    # which we probably want.
     compose = max(curr["compose"], curr["date"])
-    # List of test cases to report results for
-    # Format: (testcase_name, use_comment)
+    #TODO: from options ^^^
+
     # use_comment=True means the testcase will get the comment, False means comment=None
     testcase_list = [
         ("QA:Testcase_base_startup", True),
@@ -318,6 +313,7 @@ def main():
 #        ("QA:Testcase_base_selinux", False),
 #        ("QA:Testcase_base_service_manipulation", False),
     ]
+        #TODO: from options , also comments
 
     # List of sections to report results for (from command line)
     sections = args.sections
