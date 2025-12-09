@@ -1,4 +1,5 @@
 /vsftpd:
+  tag: Testcase_base_startup
   summary: Public Tier1 tests
   discover:
     how: fmf
@@ -8,6 +9,7 @@
     how: tmt
 
 /chrony:
+  tag: Testcase_base_startup
   summary: Public Tier1 tests
   discover:
     how: fmf
@@ -17,6 +19,7 @@
     how: tmt
 
 /unbound:
+  tag: Testcase_base_reboot_unmount
   summary: Public Tier1 tests
   discover:
     how: fmf
