@@ -1,0 +1,8 @@
+summary: test fail
+contact: Petr Sklenar <psklenar@redhat.com>
+test: ./runtest.sh
+framework: beakerlib
+duration: 25m
+enabled: true
+tag:
+  - cloud

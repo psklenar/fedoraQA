@@ -1,0 +1,7 @@
+Description: mesa vkcube
+Owner: Petr Sklenar <psklenar@redhat.com>
+RunFor: mesa
+RunTest: ./runtest.sh
+Path: /mnt/tests/mesa/vkcube
+Requires: mesa mesa-vulkan-drivers mesa-filesystem vulkan-loader vulkan-validation-layers vulkan-tools dmidecode mutter xwayland-run
+TestTime: 25m
