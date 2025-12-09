@@ -1,6 +1,9 @@
 /Testcase_base_service_manipulation:
   summary: Public Tier1 tests
   discover:
+  - name: unbound-public
+    how: fmf
+    url: "https://gitlab.com/redhat/centos-stream/tests/unbound.git"
   - name: cups-public
     how: fmf
     filter: 'name:/Sanity/cups-systemd-units-smoke'

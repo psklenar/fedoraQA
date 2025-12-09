@@ -257,28 +257,29 @@ def fetch_and_cache_xunit_xml(api_url, max_retries=3, retry_interval=10, cache=N
         return result
 
 
-def match_qatestcase_with_fmf_plan_name(xunit_data, qatestcase, fmf_plan_name):
+def match_qatestcase_with_fmf_plan_name(xunit_data, qatestcase, fmf_plan_name_tag):
     """
-    Match a QA testcase with FMF plan name in cached XUnit XML data.
-    This function can be called multiple times with different testcases/plan names
-    without re-downloading the XML.
+    Match a QA testcase with FMF plan name tag in cached XUnit XML data.
+    Extracts test results from matching testsuite elements.
     
     Args:
         xunit_data: Dictionary from fetch_and_cache_xunit_xml() containing:
             - xunit_xml_root: Parsed XML root element
             - test_plan_names: List of all test plan names
         qatestcase: QA testcase string (e.g., "QA:Testcase_base_system_logging")
-        fmf_plan_name: FMF plan name string (e.g., "cloud")
+        fmf_plan_name_tag: FMF plan name tag string (e.g., "cloud")
     
     Returns:
         dict: Dictionary containing:
             - qatestcase_found: bool indicating if QA testcase was found in xunit XML path
-            - fmf_plan_name_found: bool indicating if FMF plan name was found in xunit XML path
-            - matching_test_plans: list of test plan names that match both qatestcase and fmf_plan_name
+            - fmf_plan_name_found: bool indicating if FMF plan name tag was found in xunit XML path
+            - matching_test_plans: list of tuples (test_plan_name, result) that match both qatestcase and fmf_plan_name_tag
+            - testcase_result: The result from matching testsuite (e.g., "passed", "failed") or None
     """
     qatestcase_found = False
     fmf_plan_name_found = False
     matching_test_plans = []
+    testcase_result = None
     
     # Extract testcase name from qatestcase (remove "QA:" prefix if present)
     # "QA:Testcase_base_system_logging" -> "Testcase_base_system_logging"
@@ -287,37 +288,34 @@ def match_qatestcase_with_fmf_plan_name(xunit_data, qatestcase, fmf_plan_name):
         # If it doesn't start with Testcase_, add it
         testcase_name = f"Testcase_{testcase_name.replace('Testcase_', '')}"
     
-    # Use cached test plan names or parse from XML root
-    if xunit_data.get('test_plan_names'):
-        test_plan_names = xunit_data['test_plan_names']
-    elif xunit_data.get('xunit_xml_root') is not None:
-        # Fallback: extract from XML root if test_plan_names not available
-        test_plan_names = []
-        for testsuite in xunit_data['xunit_xml_root'].findall('.//testsuite'):
-            test_plan_name = testsuite.get('name', '')
-            if test_plan_name:
-                test_plan_names.append(test_plan_name)
+    # Need to parse from XML root to get both name and result attributes
+    if xunit_data.get('xunit_xml_root') is not None:
+        root = xunit_data['xunit_xml_root']
     else:
         # No XML data available
         return {
             'qatestcase_found': False,
             'fmf_plan_name_found': False,
-            'matching_test_plans': []
+            'matching_test_plans': [],
+            'testcase_result': None
         }
     
-    # Process each test plan name
-    for test_plan_name in test_plan_names:
-        # Test plan name format: /plans/{fmf_plan_name}/.../Testcase_xxx/Testcase_yyy/...
+    # Process each testsuite element to get both name and result
+    for testsuite in root.findall('.//testsuite'):
+        test_plan_name = testsuite.get('name', '')
+        test_plan_result = testsuite.get('result', '')  # Extract result attribute
+        
+        # Test plan name format: /plans/{fmf_plan_name_tag}/.../Testcase_xxx/Testcase_yyy/...
         # Example: /plans/cloud/external/Testcase_base_service_manipulation
         # Example: /plans/cloud/local/wiki/Testcase_base_startup/Testcase_base_reboot_unmount/Testcase_base_system_logging/...
         if test_plan_name.startswith('/plans/'):
             # Split path into elements
             path_elements = [elem for elem in test_plan_name.split('/') if elem]
             
-            # Check if FMF plan name appears anywhere in the path elements
+            # Check if FMF plan name tag appears anywhere in the path elements
             plan_name_in_path = False
             for element in path_elements:
-                if fmf_plan_name.lower() == element.lower():
+                if fmf_plan_name_tag.lower() == element.lower():
                     plan_name_in_path = True
                     fmf_plan_name_found = True
                     break
@@ -331,14 +329,18 @@ def match_qatestcase_with_fmf_plan_name(xunit_data, qatestcase, fmf_plan_name):
                     qatestcase_found = True
                     break
             
-            # If both match, add to matching list
+            # If both match, add to matching list with result
             if plan_name_in_path and testcase_in_path:
-                matching_test_plans.append(test_plan_name)
+                matching_test_plans.append((test_plan_name, test_plan_result))
+                # Use the first matching result (or could aggregate multiple results)
+                if testcase_result is None:
+                    testcase_result = test_plan_result
     
     return {
         'qatestcase_found': qatestcase_found,
         'fmf_plan_name_found': fmf_plan_name_found,
-        'matching_test_plans': matching_test_plans
+        'matching_test_plans': matching_test_plans,
+        'testcase_result': testcase_result
     }
 
 
@@ -410,7 +412,8 @@ def main():
     for qatestcase in testcases:
         match_result = match_qatestcase_with_fmf_plan_name(xunit_data, qatestcase, "cloud")
         if match_result['qatestcase_found']:
-            print(f"Found: {qatestcase} - Result: {xunit_data['overall']} ({len(match_result['matching_test_plans'])} plans)")
+            result = match_result['testcase_result'] or 'unknown'
+            print(f"Found: {qatestcase} - Result: {result} ({len(match_result['matching_test_plans'])} plans)")
             logging.debug(f"  Plans: {match_result['matching_test_plans']}")
         else:
             logging.debug(f"Not found: {qatestcase}")
