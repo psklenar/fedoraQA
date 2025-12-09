@@ -1,14 +1,8 @@
-/wiki:
-  tag:
-    - Testcase_base_system_logging
-    - Testcase_base_update_cli
+/wiki/Testcase_base_startup/Testcase_base_reboot_unmount/Testcase_base_system_logging/Testcase_base_system_logging/Testcase_base_edition_self_identification:
   summary: Tests from https://fedoraproject.org/wiki/Test_Results:Current_Cloud_Test
   discover:
     how: fmf
     filter: 'tag: cloud'
     url: "https://github.com/psklenar/fedoraQA.git"
-    adjust-tests:
-        - tag: 'QA:Testcase_base_startup'
-        - tag: 'QA:Testcase_base_reboot_unmount'
   execute:
     how: tmt
