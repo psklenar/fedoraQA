@@ -5,6 +5,8 @@
     how: fmf
     filter: 'tier: 1'
     url: "https://gitlab.com/redhat/centos-stream/tests/vsftpd.git"
+    adjust-tests:
+        - tag: 'QA:Testcase_base_startup'
   execute:
     how: tmt
 
@@ -12,6 +14,8 @@
   tag: Testcase_base_startup
   summary: Public Tier1 tests
   discover:
+    adjust-tests:
+        - tag: 'QA:Testcase_base_startup'
     how: fmf
     filter: 'tier: 1'
     url: "https://gitlab.com/redhat/centos-stream/tests/chrony.git"
@@ -22,6 +26,8 @@
   tag: Testcase_base_reboot_unmount
   summary: Public Tier1 tests
   discover:
+    adjust-tests:
+        - tag: 'QA:Testcase_base_reboot_unmount'
     how: fmf
     filter: 'tier: 1'
     url: "https://gitlab.com/redhat/centos-stream/tests/unbound.git"

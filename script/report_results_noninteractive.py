@@ -261,7 +261,6 @@ def report_testcase_list(
 
     return reported
 
-
 def main():
     """Example main function demonstrating how to use report_result."""
     parser = argparse.ArgumentParser(description="Report release validation results non-interactively.")
