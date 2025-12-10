@@ -5,4 +5,4 @@ framework: beakerlib
 duration: 25m
 enabled: true
 tag:
-  - cloud
+  - cl1oud
