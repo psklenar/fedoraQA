@@ -38,7 +38,7 @@ for ARCH in aarch64 x86_64; do
 
 
     
-    python report_results_noninteractive.py \
+    python report_results_noninteractiveNEW.py \
         --sections "$ARCH" \
         --api-url "$API_URL" \
     
