@@ -43,15 +43,16 @@ def fetch_api_data(api_url, max_retries=3, retry_interval=10):
 
 ###########################################################
 # Parse the output
-#eval $(./tft-wait.py --git-url <url> --compose <compose> 2>/dev/null | grep -E '^(FINAL_STATE|DURATION|ARTIFACTS_URL|RESULTS)=')
+#eval $(./tft-wait.py --git-url <url> --compose <compose> 2>/dev/null | grep -E '^(FINAL_STATE|DURATION|ARTIFACTS_URL|API_URL|RESULTS)=')
 
 # Or source it
-#source <(./tft-wait.py --git-url <url> --compose <compose> 2>&1 | grep -E '^(FINAL_STATE|DURATION|ARTIFACTS_URL|RESULTS)=')
+#source <(./tft-wait.py --git-url <url> --compose <compose> 2>&1 | grep -E '^(FINAL_STATE|DURATION|ARTIFACTS_URL|API_URL|RESULTS)=')
 
 # Then use the variables
 #echo "State: $FINAL_STATE"
 #echo "Duration: $DURATION"
 #echo "Artifacts: $ARTIFACTS_URL"
+#echo "API URL: $API_URL"
 #echo "Results: $RESULTS"
 ###########################################################
 
@@ -267,12 +268,14 @@ def main():
         env['FINAL_STATE'] = final_state
         env['DURATION'] = f"{total_duration_hours:.2f}h"
         env['ARTIFACTS_URL'] = artifacts_url if artifacts_url else ""
+        env['API_URL'] = result_url
         env['RESULTS'] = results
         
         # Output in bash-parsable format
         print(f"FINAL_STATE={env['FINAL_STATE']}")
         print(f"DURATION={env['DURATION']}")
         print(f"ARTIFACTS_URL={env['ARTIFACTS_URL']}")
+        print(f"API_URL={env['API_URL']}")
         print(f"RESULTS={env['RESULTS']}")
 
         sys.exit(0 if final_state == 'complete' else 1)
@@ -282,12 +285,14 @@ def main():
         env['FINAL_STATE'] = 'failed'
         env['DURATION'] = '0.00h'
         env['ARTIFACTS_URL'] = ''
+        env['API_URL'] = ''
         env['RESULTS'] = 'warn'
         
         # Output in bash-parsable format
         print(f"FINAL_STATE={env['FINAL_STATE']}")
         print(f"DURATION={env['DURATION']}")
         print(f"ARTIFACTS_URL={env['ARTIFACTS_URL']}")
+        print(f"API_URL={env['API_URL']}")
         print(f"RESULTS={env['RESULTS']}")
         sys.exit(1)
 
