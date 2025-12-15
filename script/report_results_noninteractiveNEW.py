@@ -16,27 +16,7 @@ import requests
 import xml.etree.ElementTree as ET
 import wikitcms.wiki
 import wikitcms.result
-# Don't import comment_string from relval - use our own version that handles None
-import relval
-
-
-def comment_string(string, maxlen=250):
-    """
-    Take 'string' and wrap it in <ref> </ref> if it's not the empty
-    string. Raise a ValueError if it's longer than maxlen.
-    Handle None case like report_results_noninteractive.py
-    """
-    # Handle None case
-    if string is None:
-        return None
-    string = string.strip()
-    if maxlen and len(string) > maxlen:
-        err = f"Comment is too long: {len(string)} characters, max is {maxlen}."
-        raise ValueError(err)
-    # Don't produce an empty <ref></ref> if there's no comment
-    if not string:
-        return string
-    return f"<ref>{string}</ref>"
+import relval.report_results as rrs
 
 
 def get_wiki_connection(wiki=None, release=None, compose=None, milestone=None, sections=None, environment=None, testtype=None, production=False, dist="Fedora"):
@@ -58,7 +38,6 @@ def get_wiki_connection(wiki=None, release=None, compose=None, milestone=None, s
         tuple: (wiki, event, release, milestone, compose, page)
         If testtype is None, page will be None
     """
-    import wikitcms.wiki
     
     # Connect to wiki if not provided
     if wiki is None:
@@ -533,7 +512,7 @@ def modify_testcase_result(
     # Format comment - same as report_result
     # wikitcms.result.Result expects empty string, not None
     if comment:
-        comment = comment_string(comment, maxlen=250)
+        comment = rrs.comment_string(comment, maxlen=250)
     else:
         comment = ""  # Use empty string instead of None
     
@@ -650,7 +629,7 @@ def check_bot_results_exist(wiki=None, release=None, compose=None, milestone=Non
     else:
         # Debug: show what was checked
         env_filter = f" (filtered by environment: {environment})" if environment else ""
-        logging.debug(f"No bot results found in {len(tests)} testcases{env_filter}")
+        print(f"No bot results found in {len(tests)} testcases{env_filter}")
     
     return bot_found
 
@@ -664,10 +643,6 @@ def main():
                         help="Use production wiki instead of staging (default: staging)")
     parser.add_argument("--debug", action="store_true",
                         help="Enable debug logging to show detailed information")
-    parser.add_argument("--try", dest="try_mode", action="store_true",
-                        help="Only check if results exist, don't add them. Prints 'RESULTS MISSING'")
-    parser.add_argument("--comment", default="",
-                        help="Comment to add to test results")
     parser.add_argument("--list_testcases", action="store_true",
                         help="Only list testcases and exit (don't process results)")
     parser.add_argument("--api-url", "--api_url", dest="api_url",
@@ -681,25 +656,29 @@ def main():
     else:
         logging.basicConfig(level=logging.WARNING, format='%(levelname)s: %(message)s')
     
-    # Set up wiki connection
-    # Use staging by default, production if --production is specified
-    test = not args.production
-    if test:
-        wiki = wikitcms.wiki.Wiki("stg.fedoraproject.org")
-    else:
-        wiki = wikitcms.wiki.Wiki("fedoraproject.org")
-    wiki.login()
-    curr = wiki.get_current_compose(dist='Fedora')
-    release = int(curr["release"])
-    milestone = curr["milestone"]
-    compose = max(curr["compose"], curr["date"])
+    # Set up wiki connection and get compose information
+    # Use get_wiki_connection to avoid duplicating staging/production logic
+    wiki, event, release, milestone, compose, _ = get_wiki_connection(
+        wiki=None,
+        release=None,
+        compose=None,
+        milestone=None,
+        sections=None,
+        environment=None,
+        testtype=None,  # Don't get page yet, just get wiki and compose info
+        production=args.production,
+        dist="Fedora"
+    )
     # sections is now a single string, convert to list for functions that expect a list
     sections_arg = args.sections
     # Functions expect sections as list or None, so convert single string to list
     sections_for_functions = [sections_arg] if sections_arg else None
     environment="EC2 (KVM)"
     testtype="Cloud"
-    #TODO: from options when needed^^^
+    logging.info(f"release={release}, milestone={milestone}, compose={compose}")
+    logging.info(f"sections_arg={sections_arg}, sections_for_functions={sections_for_functions}")
+    logging.info(f"environment={environment}, testtype={testtype}, production={args.production}")
+    #TODO: from options? when needed^^^
 
     # If --list_testcases option is set, check if any bot results exist, then exit
     if args.list_testcases:
@@ -746,52 +725,47 @@ def main():
                     wiki_status = "fail"
                 
                 # Add result to wiki using modify_testcase_result
-                if not args.try_mode:
-                    try:
-                        # Only add comment to the first result that gets added
-                        comment_to_use = ""
-                        if not comment_added:
-                            # Use comment if provided, otherwise use artifacts_url
-                            if args.comment:
-                                comment_to_use = args.comment
-                            elif xunit_data.get('artifacts_url'):
-                                comment_to_use = xunit_data.get('artifacts_url', '')
-                        
-                        add_result = modify_testcase_result(
-                            qatestcase=qatestcase,
-                            wiki=wiki,
-                            release=release,
-                            compose=compose,
-                            milestone=milestone,
-                            sections=sections_for_functions,
-                            environment=environment,
-                            testtype=testtype,
-                            production=args.production,
-                            status=wiki_status,
-                            comment=comment_to_use,
-                            bugs=None,
-                            allow_duplicate=True, # Assuming allow_duplicate is True for non-interactive mode
-                            artifacts_url=xunit_data.get('artifacts_url', '')
-                        )
-                        
-                        # Mark comment as added if result was successfully added and comment was used
-                        if add_result.get('result_added') and comment_to_use:
-                            comment_added = True
-                        if add_result.get('result_added'):
-                            print(f"  ✓ Added result: {wiki_status} for {qatestcase}")
-                            # Collect wiki URL if available
-                            if add_result.get('wiki_url'):
-                                wiki_urls.add(add_result.get('wiki_url'))
-                        else:
-                            logging.warning(f"  ✗ Failed to add result for {qatestcase}")
-                    except Exception as e:
-                        import traceback
-                        logging.error(f"  ✗ Error adding result for {qatestcase}: {e}")
-                        # Print full traceback to stderr
-                        print(f"ERROR: Full traceback for {qatestcase}:", file=sys.stderr)
-                        traceback.print_exc(file=sys.stderr)
-                else:
-                    logging.debug(f"  Try mode: Would add result {wiki_status} for {qatestcase}")
+                try:
+                    # Only add comment to the first result that gets added
+                    comment_to_use = ""
+                    if not comment_added:
+                        # Use artifacts_url as comment
+                        if xunit_data.get('artifacts_url'):
+                            comment_to_use = xunit_data.get('artifacts_url', '')
+                    
+                    add_result = modify_testcase_result(
+                        qatestcase=qatestcase,
+                        wiki=wiki,
+                        release=release,
+                        compose=compose,
+                        milestone=milestone,
+                        sections=sections_for_functions,
+                        environment=environment,
+                        testtype=testtype,
+                        production=args.production,
+                        status=wiki_status,
+                        comment=comment_to_use,
+                        bugs=None,
+                        allow_duplicate=True, # Assuming allow_duplicate is True for non-interactive mode
+                        artifacts_url=xunit_data.get('artifacts_url', '')
+                    )
+                    
+                    # Mark comment as added if result was successfully added and comment was used
+                    if add_result.get('result_added') and comment_to_use:
+                        comment_added = True
+                    if add_result.get('result_added'):
+                        print(f"  ✓ Added result: {wiki_status} for {qatestcase}")
+                        # Collect wiki URL if available
+                        if add_result.get('wiki_url'):
+                            wiki_urls.add(add_result.get('wiki_url'))
+                    else:
+                        logging.warning(f"  ✗ Failed to add result for {qatestcase}")
+                except Exception as e:
+                    import traceback
+                    logging.error(f"  ✗ Error adding result for {qatestcase}: {e}")
+                    # Print full traceback to stderr
+                    print(f"ERROR: Full traceback for {qatestcase}:", file=sys.stderr)
+                    traceback.print_exc(file=sys.stderr)
             else:
                 logging.debug(f"Not found: {qatestcase}")
         

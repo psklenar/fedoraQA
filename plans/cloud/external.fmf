@@ -11,3 +11,39 @@
   execute:
     how: tmt
 
+/Testcase_package_install_remove:
+#c&p from https://src.fedoraproject.org/rpms/rpm/raw/rawhide/f/plan.fmf
+  execute:
+    how: tmt
+  discover:
+    - name: same_repo
+      url: "https://src.fedoraproject.org/rpms/pyproject-rpm-macros.git"
+      how: shell
+      tests:
+      - name: pluggy
+        path: /tests
+        test: ./mocktest.sh python-pluggy
+  prepare:
+    - name: Install dependencies
+      how: install
+      package:
+      - mock
+      - rpmdevtools
+      - rpm-build
+      - dnf
+    - name: Update packages
+      how: shell
+      script: dnf upgrade -y
+    - name: Create dummy repo
+      how: shell
+      script: touch /etc/yum.repos.d/test-dummy.repo
+
+/Testcase_base_selinux:
+# from https://src.fedoraproject.org/rpms/selinux-policy/blob/rawhide/f/plans
+  summary: Tier 1 selinux-policy test plan - without 10 minute tests
+  discover:
+      how: fmf
+      url: https://src.fedoraproject.org/tests/selinux.git
+      filter: "tier:1 & tag:-failinfedora & duration:-10m | component: selinux-policy & tag:-failinfedora & duration:-10m"
+  execute:
+      how: tmt
