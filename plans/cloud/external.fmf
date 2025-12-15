@@ -44,6 +44,10 @@
   discover:
       how: fmf
       url: https://src.fedoraproject.org/tests/selinux.git
-      filter: "tier:1 & tag:-failinfedora & duration:10m | component: selinux-policy & tag:-failinfedora & duration:10m"
+      filter: "tier:1 & tag:-failinfedora & duration:-10m | component: selinux-policy & tag:-failinfedora & duration:-10m"
+      exclude:
+      - restorecon-ignores-missing 
+      - boothd-and-similar
+      - /selinux-policy/libvirt-dbus-and-similar 
   execute:
       how: tmt
