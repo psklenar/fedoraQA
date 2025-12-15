@@ -4,8 +4,8 @@
 # For each architecture, it checks if results exist, runs tests, and reports results
 # Runs architectures in parallel
 
-# Create temporary directory for logs organized by date
-DATE_DIR=$(date +%Y%m%d)
+# Create temporary directory for logs organized by date and time
+DATE_DIR=$(date +%Y%m%d-%H%M)
 TMP_DIR="/tmp/fedoraqa/$DATE_DIR"
 mkdir -p "$TMP_DIR"
 echo "Log directory: $TMP_DIR"
