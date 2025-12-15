@@ -24,7 +24,7 @@ process_arch() {
         echo "=========================================="
         
         # Get the distro image name for this architecture
-        DISTRO=$(python get_image_names.py | grep rawhide | grep $ARCH | gawk -F': ' '{ print $2 }')
+        DISTRO=$(python get_image_names.py | grep rawhide | grep "$ARCH" | gawk -F": " '{print $2}')
         
         # Check if bot results already exist for this architecture
         if python report_results_noninteractiveNEW.py --section $ARCH --list_testcases 2>&1 | grep -q 'bot touched this wiki' ; then
@@ -95,4 +95,3 @@ fi
 
 echo "All architectures processed successfully!"
 echo "Logs available in: $TMP_DIR"
-
