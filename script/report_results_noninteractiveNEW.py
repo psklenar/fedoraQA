@@ -45,7 +45,21 @@ def get_wiki_connection(wiki=None, release=None, compose=None, milestone=None, s
             wiki = wikitcms.wiki.Wiki("fedoraproject.org")
         else:
             wiki = wikitcms.wiki.Wiki("stg.fedoraproject.org")
-        wiki.login()
+        
+        # Retry wiki login to handle transient API errors
+        max_retries = 3
+        retry_interval = 5
+        for attempt in range(1, max_retries + 1):
+            try:
+                wiki.login()
+                break
+            except Exception as e:
+                if attempt < max_retries:
+                    logging.warning(f'Wiki login failed (attempt {attempt}/{max_retries}): {e}, retrying in {retry_interval} seconds')
+                    time.sleep(retry_interval)
+                else:
+                    logging.error(f'Wiki login failed after {max_retries} attempts: {e}')
+                    raise
     
     # Get current compose information if not provided
     if release is None or milestone is None or compose is None:

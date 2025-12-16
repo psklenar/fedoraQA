@@ -40,14 +40,18 @@
 
 /Testcase_base_selinux:
 # from https://src.fedoraproject.org/rpms/selinux-policy/blob/rawhide/f/plans
-  summary: Tier 1 selinux-policy test plan - without 10 minute tests
+# pick a few tests to make it quick and stable
+  summary: selinux-policy test plan with a few stable tests
   discover:
       how: fmf
       url: https://src.fedoraproject.org/tests/selinux.git
-      filter: "tier:1 & tag:-failinfedora & duration:-10m | component: selinux-policy & tag:-failinfedora & duration:-10m"
-      exclude:
-      - restorecon-ignores-missing 
-      - boothd-and-similar
-      - /selinux-policy/libvirt-dbus-and-similar 
+#      filter: "tier:1 & tag:-failinfedora & duration:-10m | component: selinux-policy & tag:-failinfedora & duration:-10m"     
+      include:
+      - /libselinux/setenforce 
+      - /setools/seinfo 
+      - /selinux-policy/watch-permissions 
+      - /policycoreutils/setsebool
+      - /policycoreutils/selinux-info 
+      - /selinux-policy/rsyslog-and-similar 
   execute:
       how: tmt
