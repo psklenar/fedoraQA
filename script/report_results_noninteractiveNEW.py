@@ -2,9 +2,18 @@
 # Requires testing-farm package
 
 
-"""This file contains a non-interactive function to report release
-validation results. It reuses logic from report_results.py but accepts
-all parameters as function arguments instead of prompting the user.
+"""Non-interactive script to report release validation results from Testing Farm to Fedora wiki.
+
+Step-by-step process:
+1. Connect to Fedora wiki (staging or production) and get current compose information
+2. Get list of testcases from wiki for specified sections and test type, TODO: FROM OPTIONS?
+3. Fetch Testing Farm API data from provided --api-url
+4. Download and parse XUnit XML results from Testing Farm artifacts
+5. Match each wiki testcase with FMF plan names in XUnit XML paths
+6. For each matched testcase: Map XUnit result (passed/failed) to wiki status (pass/fail)
+7. Add results to wiki with LOGINed user, status, and artifacts URL as one single comment
+
+X. Option --list_testcases: Check if bot results exist for the test type and exit, for automation purposes if procceed with the script.
 """
 
 import argparse
@@ -239,12 +248,8 @@ def fetch_and_cache_xunit_xml(api_url, max_retries=3, retry_interval=10, cache=N
                     if test_plan_name:
                         test_plan_names.append(test_plan_name)
                 
-            except ET.ParseError as e:
-                logging.error(f'Error parsing XUnit XML from {xunit_url}: {e}')
-            except requests.exceptions.RequestException as e:
-                logging.error(f'Error fetching XUnit URL {xunit_url}: {e}')
             except Exception as e:
-                logging.error(f'Unexpected error processing XUnit XML: {e}')
+                logging.error(f'Error processing XUnit XML from {xunit_url}: {e}')
         
         result = {
             'overall': overall,
@@ -260,20 +265,8 @@ def fetch_and_cache_xunit_xml(api_url, max_retries=3, retry_interval=10, cache=N
         
         return result
         
-    except requests.exceptions.RequestException as e:
-        logging.error(f'Error fetching API data from {api_url}: {e}')
-        result = {
-            'overall': 'warn',
-            'xunit_url': '',
-            'artifacts_url': '',
-            'xunit_xml_root': None,
-            'test_plan_names': []
-        }
-        if cache is not None:
-            cache[api_url] = result
-        return result
     except Exception as e:
-        logging.error(f'Unexpected error fetching and caching XUnit XML: {e}')
+        logging.error(f'Error fetching API data from {api_url}: {e}')
         result = {
             'overall': 'warn',
             'xunit_url': '',
@@ -290,6 +283,11 @@ def match_qatestcase_with_fmf_plan_name(xunit_data, qatestcase, fmf_plan_name_ta
     """
     Match a QA testcase with FMF plan name tag in cached XUnit XML data.
     Extracts test results from matching testsuite elements.
+    Test plan name matches the QA:Testcase_xxx/Testcase_yyy/... pattern.
+        Example:
+            /plans/cloud/external/Testcase_base_system_logging/...
+            => QA:Testcase_base_system_logging
+           
     
     Args:
         xunit_data: Dictionary from fetch_and_cache_xunit_xml() containing:
@@ -559,17 +557,9 @@ def modify_testcase_result(
             'wiki_url': wiki_url
         }
     except Exception as e:
-        import traceback
-        error_msg = f"Error adding result: {e}"
+        error_msg = f"Failed to add result for {qatestcase}: {e}"
         logging.error(error_msg)
-        # Print traceback to stderr so it's always visible
-        print(f"ERROR: {error_msg}", file=sys.stderr)
-        print(f"Full traceback:", file=sys.stderr)
-        traceback.print_exc(file=sys.stderr)
-        # Also print debug info
-        print(f"DEBUG: test={test}, env={env}, status={status}, username={username}, comment={comment}, bugs={bugs}", file=sys.stderr)
-        # Re-raise with more context
-        raise RuntimeError(f"Failed to add result for {qatestcase}: {e}") from e
+        raise RuntimeError(error_msg) from e
 
 
 def check_bot_results_exist(wiki=None, release=None, compose=None, milestone=None, environment=None, testtype="Cloud", production=False):
@@ -775,11 +765,8 @@ def main():
                     else:
                         logging.warning(f"  ✗ Failed to add result for {qatestcase}")
                 except Exception as e:
-                    import traceback
                     logging.error(f"  ✗ Error adding result for {qatestcase}: {e}")
-                    # Print full traceback to stderr
-                    print(f"ERROR: Full traceback for {qatestcase}:", file=sys.stderr)
-                    traceback.print_exc(file=sys.stderr)
+                    print(f"ERROR: Failed to add result for {qatestcase}: {e}", file=sys.stderr)
             else:
                 logging.debug(f"Not found: {qatestcase}")
         
